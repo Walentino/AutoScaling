@@ -44,3 +44,34 @@ Maintaining High Availability with Auto Scaling
 **Scaling takes time**
 
 ###### Consider the following graph. In most situations, a considerable amount of time passes between when the need for a scaling event occurs and when the scaling event happens.
+
+<img width="661" alt="Screen Shot 2022-08-10 at 8 54 48 PM" src="https://user-images.githubusercontent.com/67527927/184047371-f1eaa489-6e08-4332-8afb-6b2cf03a32a1.png">
+
+* In this example, the rule says that you must be in a particular condition for at least two minutes.
+* CloudWatch is the underlying data collection system that monitors statistics such as CPU utilization. It is a polling protocol, and in general takes 60 seconds to aggregate new data.
+* Auto Scaling is also a polling system, and it takes another 60 seconds.
+* Then there is boot time for your server. A large, complex server may take many minutes to launch.
+* Finally, the load balancer needs to poll the server for a few cycles before it is comfortable that the server is healthy and accepting requests.
+
+### Connect to your EC2 Instance
+<img width="197" alt="Screen Shot 2022-08-10 at 8 58 21 PM" src="https://user-images.githubusercontent.com/67527927/184047650-f8be961c-23f4-46cd-b4e3-35be5ed4c25d.png">
+###### These instructions are for Mac/Linux users only. If you are a Windows user, skip ahead to the next task.
+
+###### To the left of the instructions you are currently reading, click  Download PEM.
+
+###### Save the file to the directory of your choice.
+
+###### Copy this command to a text editor:
+
+
+
+
+
+
+
+
+
+
+
+
+
