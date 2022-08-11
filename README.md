@@ -144,5 +144,147 @@ aws autoscaling create-auto-scaling-group --auto-scaling-group-name lab-as-group
 
 ###### You should see a page that looks like this:
 
+<img width="168" alt="Screen Shot 2022-08-10 at 9 11 23 PM" src="https://user-images.githubusercontent.com/67527927/184048555-6274e1f9-bf0d-4c35-8b87-e1748f5f1783.png">
+
+### VERIFY THAT AUTO SCALING WORKS
+
+###### Right-click the instance without a name, click Terminate instance (do not terminate the Command-Line Tools instance).
+###### Click Terminate
+
+###### In a few minutes a new t3.micro instance will appear because Auto Scaling will detect that the fleet size is below the minimum size.
+
+###### Refresh the console to see the new instance.
+###### Note It may take a few minutes for the new instance to appear.
+
+###### After the Instance State of the new instance is running, right-click the new instance, click Stop Instance
+###### Click Stop
+###### Auto Scaling will detect that the instance is non-responsive after a few minutes and will automatically terminate it and launch a replacement instance for you.
+
+### TAG AUTO SCALING RESOURCES
+###### Notice that the Auto Scaling instances are launched without names. There are two ways to help you better identify these instances. The first is by adding a new column to the Management Console.
+
+###### Click the Gear icon in the navigation bar of the AWS Management Console to display the Preferences dialog box.
+
+###### If it is not already selected, click the aws:autoscaling:groupName option in the Tag columns.
+
+###### Click Confirm.
+
+###### In the AWS Management Console, click the Refresh button.
+
+###### Auto Scaling automatically creates and populates a tag called aws:autoscaling:groupName for your Auto Scaling instances.
+
+###### The second way you can better identify your Auto Scaling instances is to modify your Auto Scaling group to populate the Name tag for you. You could have created a Name tag for the Auto Scaling group when you created it by using the --tags “Key=Name, Value=AS-Web-Server” option. Instead, because the Auto Scaling group already exists, modify the existing tags.
+
+###### Copy the following command into your SSH session, then press Enter.
+```
+aws autoscaling create-or-update-tags --tags "ResourceId=lab-as-group, ResourceType=auto-scaling-group, Key=Name, Value=AS-Web-Server, PropagateAtLaunch=true"
+```
+###### If the command executed successfully, you’ll be returned to the shell prompt.
+
+###### Now you will verify that the configuration was updated.
+
+###### Right-click the running instance without a name, click Stop Instance and then click Stop.
+###### In a few minutes, a new instance will be created.
+
+###### Verify that the new instance is named AS-Web-Server.
+###### Note You may need to refresh the AWS Management Console.
+
+### AUTO SCALING INTEGRATION WITH YOUR LOAD BALANCER
+###### Auto Scaling instances are being added to your load balancer. This was configured with the –load-balancer-names NameOfYourELB option when the Auto Scaling group was created. Now confirm that the instances have been added.
+
+###### Return to the EC2 Dashboard.
+###### In the navigation pane, click Load Balancers.
+###### Select the only load balancer by clicking on it.
+###### Click the Instances tab in the lower pane.
+###### Your instance should be listed by name.
+
+###### Create Auto Scaling Notifications
+###### All of these Auto Scaling activities are occurring transparently. You can configure Auto Scaling to notify you when it automatically creates or terminates instances. Auto Scaling has been integrated with Amazon Simple Notification Service (SNS) for precisely this purpose. SNS is a web service that makes it easy to set up, operate, and send notifications from the cloud. It provides developers with a highly scalable, flexible, and cost-effective ability to publish messages from an application and immediately deliver them to subscribers or other applications.
+
+###### CREATE AN AMAZON SNS TOPIC
+###### First, create an Amazon SNS topic used to send notifications.
+
+###### In the AWS Management Console, on the Services menu, click Simple Notification Service.
+
+###### If prompted, click Get Started.
+
+###### In the left navigation pane, click Topics.
+
+###### You may need to click the  icon first, then click Topics.
+
+###### Click Create topic.
+
+###### In the Name box, type 
+
+###### lab-as-topic
+
+###### In the Display name box, type a name (e.g., lab-as).
+
+###### Click Standard
+
+###### Click Create topic.
+
+###### On your topic page, click Create subscription, then configure:
+* Protocol: Email
+* Endpoint: Enter the email address used to receive email notifications
+* Click Create subscription
+
+###### Note You will need to validate your SNS subscription request, so the email address must be a valid one that you can access.
+
+###### Check your email and click the appropriate link to confirm your subscription to the topic.
+###### Now that SNS is set up, you need the Amazon Resource Number (ARN) for the SNS topic to use with Auto Scaling.
+
+###### In the AWS Management Console, return to the SNS configuration page.
+
+###### In the left navigation pane, click Topics.
+
+###### Copy the ARN for your topic lab-as-topic to your text editor.
+
+###### Your ARN should look similar to: arn:aws:sns:us-west-2:574764847664:lab-as-topic
+
+### CREATE AUTO SCALING NOTIFICATIONS
+
+###### You can use the aws autoscaling describe-auto-scaling-notification-types command on your server’s Linux command line to determine the types of Auto Scaling notifications that are supported. For example:
+
+```
+aws autoscaling describe-auto-scaling-notification-types
+
+“AutoScalingNotificationTypes”: [
+
+“autoscaling:EC2_INSTANCE_LAUNCH”,
+
+“autoscaling:EC2_INSTANCE_LAUNCH_ERROR”,
+
+“autoscaling:EC2_INSTANCE_TERMINATE”,
+
+“autoscaling:EC2_INSTANCE_TERMINATE_ERROR”,
+
+“autoscaling:TEST_NOTIFICATION”
+
+]
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
