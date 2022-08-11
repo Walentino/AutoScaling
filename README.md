@@ -326,19 +326,141 @@ aws autoscaling put-scaling-policy --policy-name lab-scale-down-policy --auto-sc
 * Whenever CPU Utilization is… select  Greater/Equal
 * than: enter 40
 
+###### Note: This is referring to the instance using 40% CPU utilization or more for 1 datapoint in 1 time interval (1 minute).
 
+###### Select Next.
+###### For Notification, configure:
+* Under Alarm state trigger section, select In alarm
+* Select an SNS Topic:  Select an existing SNS topic
+* Send a notification to… in the text box, select lab-as-topic
 
+###### Note: Under email endpoint, the email address you added to the SNS subscription will be displayed.
 
+###### Under Auto Scaling action, select Add Autoscaling action.
+* Under Alarm state trigger section, select In alarm
+* Resource type:  EC2 Auto Scaling group.
+* Select a group choose lab-as-group
+* Take the following action select lab-scale-up-policy (Add 1 instance)
+###### Select Next.
+###### Enter a unique name under Alarm name: enter High CPU Alarm
+###### Select Next.
+###### Review your settings, then select Create alarm.
+### CREATE A CLOUDWATCH LOW CPU ALERT
+###### In this section (using previous steps as a guide) configure a CPU utilization alert when usage is <=20% to trigger the lab-scale-down-policy.
 
+###### In the navigation pane, click Alarms -> In alarm.
 
+###### Choose Create alarm.
 
+###### Choose Select metric
 
+###### Under Metrics, select EC2.
 
+###### Select By Auto Scaling Group.
 
+###### In the search  box, enter CPUUtilization
 
+###### Select  lab-as-group
 
+###### Select View graphed metrics tab, then configure:
+# Statistic: Average
+# Period: 1 Minute
 
+###### Choose Select metric.
 
+###### Scroll down to the Conditions
+* Whenever CPU Utilization is… select  Lower/Equal
+* than: enter 20
+###### Note: This is referring to the instance using 20% CPU utilization or less for 1 datapoint in 1 time interval (1 minute).
+
+###### Select Next.
+###### For Notification, configure:
+* Under Alarm state trigger section, select in Alarm
+
+* Select an SNS Topic:  Select an existing SNS topic
+
+* Send a notification to… in the text box, select lab-as-topic
+
+###### Note: Under email endpoint, the email address you added to the SNS subscription will be displayed.
+
+###### Under Auto Scaling action, select Add Autoscaling action.
+* Under Alarm state trigger section, select in Alarm
+
+* Resource type:  EC2 Auto Scaling group.
+
+* Select a group choose lab-as-group
+
+* Take the following action select lab-scale-down-policy (Remove 1 instance)
+
+###### Select Next.
+
+###### Define a unique name:, enter Low CPU Alarm
+
+###### Select Next.
+
+###### eview your settings, then select Create alarm.
+
+###### Note AWS recommends configuring Auto Scaling policies to scale up quickly and scale down slowly. This allows the application to better respond to increased traffic loads after a scale-up event and to make more economical use of the AWS hourly billing cycle. The example here is intentionally simple. From a billing perspective, it costs no more if the instance is scaled down after three minutes than if it is allowed to run for 59 minutes.
+
+### Test Auto Scaling
+
+###### All pieces are in place to demonstrate Auto Scaling based on application usage. You have an Auto Scaling group with a minimum of two instances and a maximum of four instances. You also have Auto Scaling policies to increase and decrease the group by one instance, and you created CloudWatch alarms to trigger policies when the aggregate average CPU utilization of the group is ≥ 40% and < 20%. Currently, one instance is running because the minimum size is one and the group is not currently under any load. Also, if you view your list of alarms, the two alarms you created should be in two different states: The High CPU alarm should be in the OK state (because your total CPU utilization is very low), and the Low CPU alarm should be in the ALARM state (because your total CPU utilization indicates that you have a surplus of processing cycles).
+
+###### Even though your CPU utilization is below 20%, Auto Scaling is not removing instances because the group size is currently at its minimum (one). Also, remember that the cooldown time for the Auto Scaling polices is five minutes (300 seconds). This is important because it influences how quickly you see the Auto Scaling activities.
+
+###### In this section, you see what happens with the scaling policies you have configured when you put additional strain on the servers.
+
+###### On the Services menu, click EC2.
+
+###### In the navigation pane, click Load Balancers.
+
+###### Copy the public DNS name value of your load balancer to your Clipboard (without the “(A Record)” text.
+
+###### In a new browser window, paste the public DNS name in the address bar. You should only see a single instance.
+
+###### Click Generate Load
+
+###### The CPU Load will jump to 100% (you may have to refresh your browser to see the CPU Load increase).
+
+###### Note This button triggers a simple background process to copy, zip, and unzip ~1 GB of nothing (/dev/zero) for 10–20 minutes.
+
+###### On the Services menu, click CloudWatch.
+
+###### Click Alarms.
+
+###### Click High CPU Alarm.
+
+###### In a few minutes you should see the Low CPU alarm state change to OK and the High CPU alarm state change to Alarm. Additionally, you should receive an email notification from Auto Scaling informing you that a scale-up action was triggered.
+
+###### You will now return to the EC2 console and examine the instance autoscaling created.
+
+###### On the Services menu, click EC2.
+###### Click Instances. A new instance has been added to your group.
+###### Switch to the browser tab that points to the A record for your load balancer, and refresh the load balancer several times to see that one server is under heavy load, while the other is not:
+
+<img width="437" alt="Screen Shot 2022-08-10 at 9 42 43 PM" src="https://user-images.githubusercontent.com/67527927/184050958-fb66c3c3-3fea-4729-9e3d-e59adff2bbb9.png">
+###### Return to the CloudWatch Dashboard to view the CPU utilization of the fleet.
+###### You probably triggered another Auto Scaling scale-up event because your server fleet average CPU equaled 40% (one instance at ~100% and the other at ~0%), and the alarm trigger was set to ≥ 40%.
+
+###### After 15–20 minutes, your Auto Scaling fleet should have scaled up to two or three instances and then scaled back down to one instance. Also note that the instances were terminated in launch order, meaning that the “oldest” instances were terminated first. This allows you to roll in new changes to your application by updating your launch configuration to a newer AMI and then triggering Auto Scaling events (increase the minimum size).
+
+###### Note You have probably noticed that this is not an overly realistic test because it essentially simulates a user overloading a single server and does not take advantage of your load balancer. In this case, Auto Scaling helps additional clients but does not load balance this “work” across multiple servers.
+
+### Wrapping Up
+
+#### VIEWING AUTO SCALING ACTIVITIES
+
+###### The Auto Scaling API provides a programmatic way to display all of the Auto Scaling activities that have occurred. You can use the aws autoscaling describe-scaling-activities command to demonstrate this capability. For example:
+```
+aws autoscaling describe-scaling-activities --auto-scaling-group-name lab-as-group
+```
+#### SUSPENDING AND RESUMING AUTO SCALING PROCESSES
+###### Auto Scaling also allows you to intentionally tell an Auto Scaling group to suspend or resume Auto Scaling processes using the as-suspend-processes and as-resume processes commands. This can be helpful if you know ahead of time that certain activities (such as maintenance events) will trigger Auto Scaling alerts, but you do not want instances to be automatically added or removed during the course of the event.
+
+#### HOW LARGE AN AUTO SCALING FARM CAN I HAVE?
+###### By default each account is assigned limits on a per-region basis. Initially, accounts are set to a maximum of 20 Amazon EC2 instances, 100 spot instances, and 5000 EBS volumes or an aggregate size of 20 TB (whichever is smaller).
+
+###### The max-instances limit only applies for instances that are in the pending, running, shutting-down, and stopping states. There is another limit, which is set to 4 times the max-instances limit that governs the total number of instances in any state. For a default account with no limit overrides, you can have 20 running instances and up to 60 stopped instances, bringing this to a total of 80 instances.
 
 
 
