@@ -263,13 +263,68 @@ aws autoscaling describe-auto-scaling-notification-types
 
 ]
 ```
+###### Copy the following command to your text file:
+```
+aws autoscaling put-notification-configuration --auto-scaling-group-name lab-as-group --topic-arn SNSARN --notification-types autoscaling:EC2_INSTANCE_LAUNCH autoscaling:EC2_INSTANCE_TERMINATE
+```
+###### Modify the script and replace SNSARN with your ARN.
 
+###### Copy the edited command from your text editor into your SSH session, then press Enter.
 
+###### If the command executed successfully, you’ll be returned to the shell prompt.
 
+###### Check your email to verify that you received a test notification email confirming the configuration.
 
+### Create Auto Scaling Policies
+###### Currently you have an Auto Scaling group that will verify that you have at least one running server. In this section, you configure the Auto Scaling group to automatically scale up whenever the average CPU of the web server fleet is ≥ 40%.
 
+###### You will use the aws autoscaling put-scaling-policy command to create two scaling policies that increase the number of servers by one for scale-up events and decrease the number of servers by one for scale-down events. In this exercise, you will also specify a “cooldown” period of 300 seconds to let the environment settle before initiating additional scale-up/down events.
 
+### CREATE A SCALE-UP POLICY
+###### Copy the following command into your SSH session, then press Enter.
+###### This will create a scale-up policy.
+```
+aws autoscaling put-scaling-policy --policy-name lab-scale-up-policy --auto-scaling-group-name lab-as-group --scaling-adjustment 1 --adjustment-type ChangeInCapacity --cooldown 300 --query 'PolicyARN' --output text
+```
+###### An ARN should be returned similar to this: arn:aws:autoscaling:us-west-2:327756672493:scalingPolicy:875526fd-5e5d-4fa6-a23d-ba9818d5d397:autoScalingGroupName/lab-as-group:policyName/lab-scale-up-policy
 
+### CREATE A SCALE-DOWN POLICY
+###### Copy the following command into your SSH session, then press Enter.
+###### This will create a scale-down policy.
+```
+aws autoscaling put-scaling-policy --policy-name lab-scale-down-policy --auto-scaling-group-name lab-as-group --scaling-adjustment -1 --adjustment-type ChangeInCapacity --cooldown 300 --query 'PolicyARN' --output text
+```
+###### Notice the policy name change as well as the slight change enclosing the –scaling-adjustment -1, which specifies a value of -1 in order to decrease the number of running instances by one each time this policy is executed.
+
+###### An ARN should be returned similar to this: arn:aws:autoscaling:us-west-2:327756672493:scalingPolicy:5918d1b7-3a82-446b-b112-c8cfbc7b847c:autoScalingGroupName/lab-as-group:policyName/lab-scale-down-policy
+
+### CREATE A CLOUDWATCH HIGH CPU ALERT
+
+###### In this section you create a CloudWatch alarm to monitor the aggregate average CPU of the Auto Scaling fleet and to trigger the lab-scale-up-policy.
+
+###### In the AWS Management Console, on the Services menu, select CloudWatch.
+
+###### In the navigation pane, select Alarms -> In alarm.
+
+###### Select Create alarm.
+
+###### Choose Select metric
+
+###### Under Metrics, select EC2.
+
+###### Select By Auto Scaling Group.
+
+###### In the search  box, enter CPUUtilization
+
+###### Select  lab-as-group
+
+###### Select View graphed metrics tab, then configure:
+* Statistic: Average
+* Period: 1 Minute
+###### Choose Select metric.
+###### Scroll down to the Conditions section
+* Whenever CPU Utilization is… select  Greater/Equal
+* than: enter 40
 
 
 
